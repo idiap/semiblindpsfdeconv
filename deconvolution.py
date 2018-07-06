@@ -32,6 +32,9 @@ from data_utils import pickle_save, pickle_load, unpad
 log = logging.getLogger('')
 
 def compute_grid(psf_map, input_image):
+    """
+    Computes interpolation grid coefficients
+    """
     grid_z1 = []
     grid_x, grid_y = np.mgrid[0:input_image.shape[0], 0:input_image.shape[1]]
     xmax = np.linspace(0, input_image.shape[0], psf_map.shape[0])
@@ -55,17 +58,25 @@ def compute_grid(psf_map, input_image):
     pickle_save('grid_{}.pickle.gz'.format(psf_map.shape[0]*psf_map.shape[1]), grid_z1, compressed=True)
 
 def load_grid(num_psf):
+    """
+    Load grid
+    """
     log.info("Load Grid data")
     return pickle_load('grid_{}.pickle.gz'.format(num_psf), compressed=True)
 
 def div0( a, b ):
-    """ ignore / 0, div0( [-1, 0, 1], 0 ) -> [0, 0, 0] """
+    """
+    ignore / 0, div0( [-1, 0, 1], 0 ) -> [0, 0, 0]
+    """
     with np.errstate(divide='ignore', invalid='ignore'):
         c = np.true_divide( a, b )
         c[ ~ np.isfinite( c )] = 0  # -inf inf NaN
     return c
 
 def _normalize_kernel(kern):
+    """
+    Normalize kernels with sum is equal to one.
+    """
     kern[kern < 0] = 0.0
     s = np.sum(kern, axis=(0, 1))
     kern = kern / s
@@ -73,7 +84,9 @@ def _normalize_kernel(kern):
 
 
 def _centered(arr, newshape):
-    # Return the center newshape portion of the array.
+    """
+    Return the center newshape portion of the array.
+    """
     newshape = np.asarray(newshape)
     currshape = np.array(arr.shape)
     startind = (currshape - newshape) // 2
@@ -86,6 +99,9 @@ def divergence(F):
     return reduce(np.add,np.gradient(F))
 
 def rl_deconv_all(img_list, psf_list, iterations=10, lbd=0.2):
+    """
+    Spatially-Variant Richardson-lucy deconvolution with Total Variation regularization
+    """
     min_value = []
     for img_idx, img in enumerate(img_list):
         img_list[img_idx] = np.pad(img_list[img_idx], np.max(psf_list[0].shape), mode='reflect')

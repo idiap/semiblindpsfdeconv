@@ -26,14 +26,14 @@ from data_utils import load
 import logging
 from matplotlib import pyplot as plt
 from torch.autograd import Variable
-from torch import FloatTensor
+import torch
 import numpy as np
 from skimage.transform import downscale_local_mean
 import scipy
 from deconvolution import load_grid, compute_grid, rl_deconv_all
 from data_utils import scale, gaussian_kernel
 from skimage import io
-
+from model import ResNet, Bottleneck, BasicBlock
 
 if (len(sys.argv) > 1):
     isGrid = 1
@@ -88,9 +88,20 @@ def live_moving_window(im, step=64):
 
     tile_dataset = np.asarray(tile_dataset)
     tile_dataset = np.reshape(tile_dataset, (tile_dataset.shape[0], 1, size, size))
-    input_tensor = FloatTensor(tile_dataset)
-    out = model(Variable(input_tensor).cuda())
-    output_npy = out.data.cpu().numpy()
+    max_size = tile_dataset.shape[0]
+    batch_size = 8
+    it = 0
+    output_npy = np.zeros((tile_dataset.shape[0], num_classes))
+    input_tensor = torch.FloatTensor(tile_dataset)
+
+    while max_size > 0:
+        num_batch = min(batch_size, max_size)
+        out = model(Variable(input_tensor.narrow(0, it, num_batch) ).cuda())
+        output_npy[it:it+num_batch] = out.data.cpu().numpy()
+        it += num_batch
+        max_size -= num_batch
+
+
     output = np.zeros((im.shape[0], im.shape[1], output_npy.shape[1]))
 
     i = 0
@@ -120,7 +131,7 @@ def deconvolution_demo(first_img):
 
     # Get focus map
     downscaled = first_img[128:-128, 128:-128]
-    downscaled = scale(downscale_local_mean(downscaled, (3, 3)))
+    #downscaled = scale(downscale_local_mean(downscaled, (3, 3)))
 
     img, _ = live_moving_window(downscaled, step)
     img_downsampled = img[::step, ::step]
@@ -146,7 +157,6 @@ def deconvolution_demo(first_img):
     # Figures
     io.imsave('original.png', scale(downscaled))
     io.imsave('deconvolved.png', scale(deconvolved))
-    plt.figure()
     fig, ax = plt.subplots()
     ax1 = plt.subplot(2, 2, 1)
     ax2 = plt.subplot(2, 2, 3)
@@ -155,15 +165,15 @@ def deconvolution_demo(first_img):
 
     im1 = ax1.imshow(downscaled)
     ax1.set_title('Original')
-    im2 = ax2.imshow(output_filtered_scaled[0][:,:], vmin=1, vmax=6)
+    im2 = ax2.imshow(output_filtered_scaled[0][:,:], vmin=0.5, vmax=4)
     ax2.set_title('Detected FWMH X (px)')
     im3 = ax3.imshow(deconvolved)
     ax3.set_title('Deconvolved RL TV')
-    im4 = ax4.imshow(output_filtered_scaled[1][:,:], vmin=1, vmax=6)
+    im4 = ax4.imshow(output_filtered_scaled[1][:,:], vmin=0.5, vmax=4)
     ax4.set_title('Detected FWMH Y (px)')
     plt.show()
 
 if __name__ == "__main__":
-    model = load('models/model_26.pt')
+    model = load('models/model_999.pt')
     image = io.imread('data/fly.png')
     deconvolution_demo(image)

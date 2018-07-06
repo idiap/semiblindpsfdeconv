@@ -28,8 +28,8 @@ import sys
 import bz2
 import pickle
 import torch
-from torchvision import transforms
-import torch.utils as utils
+from torchvision import utils, transforms
+import torch.utils.data as data
 from torchvision.datasets import folder
 from pandas.io.parsers import read_csv
 import numpy as np
@@ -59,6 +59,9 @@ def has_file_allowed_extension(filename, extensions):
 
 
 def find_classes(dir):
+    """
+    Adapted from PyTorch / Torchvision
+    """
     classes = [d for d in os.listdir(dir) if os.path.isdir(os.path.join(dir, d))]
     classes.sort()
     class_to_idx = {classes[i]: i for i in range(len(classes))}
@@ -83,8 +86,10 @@ def make_dataset(dir, class_to_idx, extensions):
     return images
 
 
-class DatasetFolder(utils.data.Dataset):
-
+class DatasetFolder(data.Dataset):
+    """
+    Adapted from PyTorch / Torchvision
+    """
     def __init__(self, root, loader, extensions, transform=None, target_transform=None):
         classes, class_to_idx = find_classes(root)
         samples = make_dataset(root, class_to_idx, extensions)
@@ -138,7 +143,9 @@ IMG_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm']
 
 
 class ImageFolder(DatasetFolder):
-
+    """
+    Adapted from PyTorch / Torchvision
+    """
     def __init__(self, root, file_list=None, transform=None, target_transform=None,
                  loader=folder.default_loader):
         super(ImageFolder, self).__init__(root, loader, folder.IMG_EXTENSIONS,
@@ -168,7 +175,12 @@ class ImageFolder(DatasetFolder):
 
 def load_crops(batch_size, listname_train = "./filelistpsf_train_regression_gaussian", listname_test="./filelistpsf_test_regression_gaussian",
                foldername_train = "./psf_train_regression_gaussian", foldername_test = "./psf_test_regression_gaussian"):
-
+    """
+    Loads the training library of cropped files and a CSV file with ground truth value
+    :param batch_size: batch size for the data loader
+    :param listname_train: filename of the CSV file with the regression values
+    :param foldername_train: folder name of the PNG files with a filename 00NNNNN.png, N begin the number of the line in the CSV file (excepted header)
+    """
     train_file = read_csv(os.path.expanduser(listname_train)).values.astype(np.float)
     test_file = read_csv(os.path.expanduser(listname_test)).values.astype(np.float)
     train_set = ImageFolder(foldername_train, transform=transforms.ToTensor(),
@@ -183,7 +195,9 @@ def load_crops(batch_size, listname_train = "./filelistpsf_train_regression_gaus
 
 
 def load_oneimage(size=64, filename='image.tif'):
-
+    """
+    Creates a dataloader with only one image
+    """
     global patch_size, batch_size
     patch_size = size
     image = grayloader(filename)

@@ -26,7 +26,9 @@ import math
 
 
 class AlexNet(nn.Module):
-
+    """
+        Alexnet with batch normalization
+    """
     def __init__(self, num_classes=2):
         super(AlexNet, self).__init__()
         self.features = nn.Sequential(
@@ -47,7 +49,6 @@ class AlexNet(nn.Module):
         )
         self.classifier = nn.Sequential(
             nn.Dropout(),
-            #nn.Linear(4096, 4096),
             nn.Linear(12544, 4096),
             nn.BatchNorm1d(4096),
             nn.ReLU(inplace=True),
@@ -71,15 +72,18 @@ def conv3x3(in_planes, out_planes, stride=1):
 
 
 class BasicBlock(nn.Module):
+    """
+        Basic block for Residual Network
+    """
     expansion = 1
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
         super(BasicBlock, self).__init__()
         self.conv1 = conv3x3(inplanes, planes, stride)
-        self.bn1 = nn.BatchNorm2d(planes)
+        self.bn1 = nn.BatchNorm2d(planes, track_running_stats=False)
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = conv3x3(planes, planes)
-        self.bn2 = nn.BatchNorm2d(planes)
+        self.bn2 = nn.BatchNorm2d(planes, track_running_stats=False)
         self.downsample = downsample
         self.stride = stride
 
@@ -103,6 +107,9 @@ class BasicBlock(nn.Module):
 
 
 class Bottleneck(nn.Module):
+    """
+    Bottleneck block with 1x1 convolution for Resnet50 and more
+    """
     expansion = 4
 
     def __init__(self, inplanes, planes, stride=1, downsample=None):
@@ -142,13 +149,16 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-
+    """
+    Residual Network
+    """
     def __init__(self, block, layers, num_classes=2):
         self.inplanes = 64
         super(ResNet, self).__init__()
         self.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=1, padding=3,
                                bias=False)
-        self.bn1 = nn.BatchNorm2d(64)
+        self.bn1 = nn.BatchNorm2d(64, track_running_stats=False)
+        self.bn1.track_running_stats = False
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
@@ -172,7 +182,7 @@ class ResNet(nn.Module):
             downsample = nn.Sequential(
                 nn.Conv2d(self.inplanes, planes * block.expansion,
                           kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes * block.expansion),
+                nn.BatchNorm2d(planes * block.expansion, track_running_stats=False),
             )
 
         layers = []
