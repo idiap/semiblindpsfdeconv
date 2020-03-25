@@ -1,6 +1,7 @@
 # Semi-blind Spatially-Variant Deconvolution
 Code for the pytorch implementation of "Semi-Blind Spatially-Variant Deconvolution in Optical Microscopy with Local Point Spread Function Estimation By Use Of Convolutional Neural Networks"
-
+https://ieeexplore.ieee.org/abstract/document/8451736
+ DOI: 10.1109/ICIP.2018.8451736 
 https://arxiv.org/abs/1803.07452
 
 ## Abstract
@@ -20,6 +21,9 @@ The following python libraries are required. We advise the use of the conda pack
 
 ## Howto
 `train.py` is the file for training. `test.py` is the file for testing and deconvolution.
+
+## Citation
+> @INPROCEEDINGS{8451736, author={A. {Shajkofci} and M. {Liebling}}, booktitle={2018 25th IEEE International Conference on Image Processing (ICIP)}, title={Semi-Blind Spatially-Variant Deconvolution in Optical Microscopy with Local Point Spread Function Estimation by Use of Convolutional Neural Networks}, year={2018}, volume={}, number={}, pages={3818-3822},} 
 
 ## Licence
 This is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License version 3 as published by the Free Software Foundation. Parts of the code are coming from the PyTorch project (https://github.com/pytorch/).
